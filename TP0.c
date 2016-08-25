@@ -15,7 +15,7 @@ int maximo(int vector[], int n){
 	if (n==0){
 		return -1;
     }	
-	else {for (int i=1; i<n-1;i++){
+	else {for (int i=0; i<n;i++){
 		if (vector[i]>max){
 			max=vector[i];
 			pos=i;
@@ -33,7 +33,7 @@ int maximo(int vector[], int n){
  */
 int comparar(int vector1[], int n1, int vector2[], int n2){
 
-	for(int i=1;i<n1-1 && i<n2-1;i++){	
+	for(int i=0;i<n1 && i<n2;i++){	
 		if (vector1[i]>vector2[i]){
 			return 1;
 		} 
@@ -57,8 +57,8 @@ int comparar(int vector1[], int n1, int vector2[], int n2){
  */
 void seleccion(int vector[], int n){
 	int aux;
-	for (int i=1;i<n-2;i++){
-		for(int j=i+1;j<n-1;j++){
+	for (int i=0;i<n-1;i++){
+		for(int j=i+1;j<n;j++){
 			if(vector[i]>vector[j]){
 				aux=vector[i];
 				vector[i]=vector[j];
