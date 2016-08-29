@@ -44,14 +44,38 @@ bool vector_redimensionar(vector_t* vector, size_t tam_nuevo) {
     return true;
 }
 
+// Devuelve el tamaño del vector
+// Pre: el vector fue creado
+size_t vector_obtener_tamanio(vector_t* vector);
+	
+
+
+
+// Devuelve si el tamaño del vector es correcto o no
+bool vector_tamanio_incorrecto(vector_t* vector,size_t pos){
+	size_t tamanio=vector_obtener_tamanio(vector);
+	if (pos<0 || pos>tamanio-1){				
+		return true;
+	}
+	else{
+		return false;
+	}	
+}
+	
 
 // Almacena en valor el dato guardado en la posición pos del vector
 // Pre: el vector fue creado
 // Post: se almacenó en valor el dato en la posición pos. Devuelve false si la
 // posición es inválida (fuera del rango del vector, que va de 0 a tamaño-1)
-bool vector_obtener(vector_t* vector, size_t pos, int* valor);
-
-
+bool vector_obtener(vector_t* vector, size_t pos, int* valor){
+	if (vector_tamanio_incorrecto(vector,pos)){
+		return false;
+	}
+	else{
+		valor=vector[pos];
+		return true;
+	}
+}	
 
 
 // Almacena el valor en la posición pos
@@ -59,10 +83,12 @@ bool vector_obtener(vector_t* vector, size_t pos, int* valor);
 // Post: se almacenó el valor en la posición pos. Devuelve false si la posición
 // es inválida (fuera del rango del vector, que va de 0 a tamaño-1) y true si
 // se guardó el valor con éxito.
-bool vector_guardar(vector_t* vector, size_t pos, int valor);
-
-
-
-// Devuelve el tamaño del vector
-// Pre: el vector fue creado
-size_t vector_obtener_tamanio(vector_t* vector);
+bool vector_guardar(vector_t* vector, size_t pos, int valor){
+	if (vector_tamanio_incorrecto(vector,pos)){
+		return false;
+	}
+	else{
+		vector[pos]=valor;
+		return true;
+	}
+}	
