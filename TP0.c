@@ -52,9 +52,7 @@ void seleccion(int vector[], int n){
 	for (int i=0;i<n-1;i++){
 		for(int j=i+1;j<n;j++){
 			if(vector[i]>vector[j]){
-				aux=vector[i];
-				vector[i]=vector[j];
-				vector[j]=aux;
+				swap(vector[i],vector[j]);
 			}	
 	}
 		}
