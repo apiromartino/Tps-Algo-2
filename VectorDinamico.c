@@ -21,8 +21,11 @@ vector_t* vector_crear(size_t tam) {
 // Destruye el vector
 // Pre: el vector fue creado
 // Post: se eliminaron todos los elementos del vector
-void vector_destruir(vector_t* vector);
-
+void vector_destruir(vector_t* vector){
+	free(vector->datos);
+	free(vector);
+}
+	
 
 
 // Cambia el tamaño del vector
@@ -46,15 +49,15 @@ bool vector_redimensionar(vector_t* vector, size_t tam_nuevo) {
 
 // Devuelve el tamaño del vector
 // Pre: el vector fue creado
-size_t vector_obtener_tamanio(vector_t* vector);
-	
+size_t vector_obtener_tamanio(vector_t* vector){
+	return vector->tam;
+}	
 
 
 
 // Devuelve si el tamaño del vector es correcto o no
 bool vector_tamanio_incorrecto(vector_t* vector,size_t pos){
-	size_t tamanio=vector_obtener_tamanio(vector);
-	if (pos<0 || pos>tamanio-1){				
+	if (pos<0 || pos>=vector->tam){				
 		return true;
 	}
 	else{
@@ -72,7 +75,8 @@ bool vector_obtener(vector_t* vector, size_t pos, int* valor){
 		return false;
 	}
 	else{
-		valor=vector[pos];
+		int aux = *((vector->datos)+pos);
+		*valor = aux;
 		return true;
 	}
 }	
@@ -88,7 +92,8 @@ bool vector_guardar(vector_t* vector, size_t pos, int valor){
 		return false;
 	}
 	else{
-		vector[pos]=valor;
+		*((vector -> datos) + pos) = valor;
 		return true;
 	}
 }	
+	
