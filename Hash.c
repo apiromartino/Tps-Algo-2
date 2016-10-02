@@ -157,6 +157,7 @@ void *hash_borrar(hash_t *hash, const char *clave){
 					hash->tabla[pos].dato = hash->destructor;
 					hash->cantidad--;
 					hash->cantidad_borrado++;
+					free(hash->tabla[pos].clave);
 				 	encontrado = true;
 				 }	
 	}
@@ -226,6 +227,11 @@ size_t hash_cantidad(const hash_t *hash){
 
 
 void hash_destruir(hash_t *hash){
+	for (int i = 0; i < hash->tam; i++){
+		if (hash->tabla[i].estado == LLENO){
+			free(hash->tabla[i].clave);
+		}
+	}
 	free(hash->tabla);
 	free(hash);
 }
