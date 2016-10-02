@@ -205,7 +205,7 @@ bool hash_pertenece(const hash_t *hash, const char *clave){
 	size_t pos = Hash(clave, hash->tam);
 	bool encontrado = false;
 	while (!encontrado){
-	if (hash->tabla[pos].clave == clave){
+	if (hash->tabla[pos].estado == LLENO && hash->tabla[pos].clave == clave){
 		encontrado = true;
 		}
 		else if ((hash->tabla[pos].estado == BORRADO) || (hash->tabla[pos].estado == LLENO && hash->tabla[pos].clave != clave)){
