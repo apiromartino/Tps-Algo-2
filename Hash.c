@@ -4,8 +4,9 @@
 
 
 #define TAM_INI 97
-#define INITIAL_VALUE 0
-#define M 31
+#define INITIAL_VALUE 5381
+#define M 33
+
 typedef enum {BORRADO, LLENO, FINAL, VACIO} estado_t;
 
 typedef struct celda_hash{
@@ -20,14 +21,14 @@ struct hash{
 	size_t tam;
 	size_t cantidad;
 	size_t cantidad_borrado;
-	hash_destruir_dato_t destructor; //Por ahi es puntero.
+	hash_destruir_dato_t destructor; 
 };
 
 
 
-size_t Hash(const char *clave, size_t tam) {
+size_t Hash(const char *clave, size_t tam, size_t len) {
    size_t hash = INITIAL_VALUE;
-   for(size_t i = 0; i < tam; ++i)
+   for(size_t i = 0; i < len; ++i)
       hash = M * hash + clave[i];
    return hash % tam;
 }
@@ -103,7 +104,8 @@ char *strdup(const char *old) {
 
 bool hash_guardar(hash_t *hash, const char *clave, void *dato){
 
-	size_t pos = Hash(clave, hash->tam);
+	size_t len = strlen(clave);
+	size_t pos = Hash(clave, hash->tam, len);
 	bool terminado = false;
 	while (!terminado){
 
@@ -121,11 +123,12 @@ bool hash_guardar(hash_t *hash, const char *clave, void *dato){
 		else if ((hash->tabla[pos].estado == BORRADO) || (hash->tabla[pos].estado == LLENO && hash->tabla[pos].clave != clave)){
 				pos++;
 			}		
-			else {  hash->tabla[pos].dato = hash->destructor;
+			else if (hash->tabla[pos].estado == LLENO && hash->tabla[pos].clave == clave){
+					hash->tabla[pos].dato = hash->destructor;
 					hash->tabla[pos].dato = dato;
 					hash->cantidad++;
 					terminado = true;
-			}
+				}
 	}
 
 	size_t factor_carga = (hash->cantidad + hash->cantidad_borrado) / hash->tam;
@@ -142,7 +145,8 @@ void *hash_borrar(hash_t *hash, const char *clave){
 		return NULL;
 	}
 	void* aux;	
-	size_t pos = Hash(clave, hash->tam);
+	size_t len = strlen(clave);
+	size_t pos = Hash(clave, hash->tam, len);
 	bool encontrado = false;
 	while (!encontrado){
 		if (hash->tabla[pos].estado == FINAL){
@@ -177,7 +181,8 @@ void *hash_obtener(const hash_t *hash, const char *clave){
 	if(!hash_pertenece(hash, clave)){
 		return NULL;
 	}
-	size_t pos = Hash(clave, hash->tam);
+	size_t len = strlen(clave);
+	size_t pos = Hash(clave, hash->tam, len);
 	bool encontrado = false;
 	while (!encontrado){
 	if (hash->tabla[pos].estado == FINAL){
@@ -202,7 +207,8 @@ bool hash_pertenece(const hash_t *hash, const char *clave){
 	if (hash->cantidad == 0){
 		return false;
 	}
-	size_t pos = Hash(clave, hash->tam);
+	size_t len = strlen(clave);
+	size_t pos = Hash(clave, hash->tam, len);
 	bool encontrado = false;
 	while (!encontrado){
 	if (hash->tabla[pos].estado == LLENO && hash->tabla[pos].clave == clave){
@@ -289,3 +295,8 @@ bool hash_iter_al_final(const hash_iter_t *iter){
 void hash_iter_destruir(hash_iter_t* iter){
 	free(iter);
 }
+
+
+
+
+
