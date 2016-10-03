@@ -51,7 +51,7 @@ hash_t *hash_crear(hash_destruir_dato_t destruir_dato){
 	hash->cantidad = 0;
 	hash->cantidad_borrado = 0;
 	hash->destructor = destruir_dato;
-	for (int i = 0; i < (TAM_INI - 1); i++){
+	for (size_t i = 0; i < (TAM_INI - 1); i++){
 		hash->tabla[i].estado = VACIO;
 	}
 	hash->tabla[TAM_INI - 1].estado = FINAL;
@@ -60,7 +60,7 @@ hash_t *hash_crear(hash_destruir_dato_t destruir_dato){
 
 
 bool pasar_datos(hash_t* hash, hash_t* hash_viejo){
-	for(int i = 0; i < hash->tam; i++){
+	for(size_t i = 0; i < hash->tam; i++){
 		if (hash_viejo->tabla[i].estado == LLENO){
 			hash_guardar(hash, hash_viejo->tabla[i].clave, hash_viejo->tabla[i].dato);
 		}
@@ -84,7 +84,7 @@ hash_t* redimensionar_hash (size_t tam_nuevo, hash_t* hash_viejo){
 	hash->cantidad_borrado = 0;
 	hash->destructor = hash_viejo->destructor; //Por ahi pasar destruir dato por parametro y asignarlo al nuevo hash.
 	hash->tabla[tam_nuevo - 1].estado = FINAL;
-	for (int i = 0; i < (tam_nuevo - 1); i++){
+	for (size_t i = 0; i < (tam_nuevo - 1); i++){
 		hash->tabla[i].estado = VACIO;
 	}
 	pasar_datos(hash, hash_viejo);
@@ -110,11 +110,14 @@ bool hash_guardar(hash_t *hash, const char *clave, void *dato){
 	while (!terminado){
 
 	if (hash->tabla[pos].estado == VACIO){
-		char* copia = strdup(clave);	
+		char* copia = strdup(clave);
+		if (copia == NULL){
+			return false;
+		}	
+		hash->tabla[pos].estado = LLENO;
 		hash->tabla[pos].clave = copia;
 		hash->tabla[pos].dato = dato;
 		hash->cantidad++;
-		hash->tabla[pos].estado = LLENO;
 		terminado = true;
 	} 
 	else if (hash->tabla[pos].estado == FINAL){
@@ -172,9 +175,6 @@ void *hash_borrar(hash_t *hash, const char *clave){
 	return aux; 
 }
 	
-
-
-
 void *hash_obtener(const hash_t *hash, const char *clave){
 	size_t pos = Hash(clave, hash->tam);
 	bool encontrado = false;
