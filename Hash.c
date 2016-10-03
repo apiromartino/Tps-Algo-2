@@ -4,8 +4,6 @@
 
 
 #define TAM_INI 97
-#define INITIAL_VALUE 5381
-#define M 33
 
 typedef enum {BORRADO, LLENO, FINAL, VACIO} estado_t;
 
@@ -26,13 +24,15 @@ struct hash{
 
 
 
-size_t Hash(const char *clave, size_t tam, size_t len) {
-   size_t hash = INITIAL_VALUE;
-   for(size_t i = 0; i < len; ++i)
-      hash = M * hash + clave[i];
-   return hash % tam;
-}
+size_t Hash(const char *str, size_t tam){
+    
+    size_t hash = 5381;
+    int c = *str;
+	while (c == *str++)
+        hash = hash * 33 + c; 
 
+    return hash % tam;
+}
 typedef void (*hash_destruir_dato_t)(void *);
 
 
@@ -94,9 +94,10 @@ hash_t* redimensionar_hash (size_t tam_nuevo, hash_t* hash_viejo){
 
 
 char *strdup(const char *old) {
-	char *new;
-	if((new = malloc(strlen(old) + 1)) == NULL)
-	return NULL;
+	char *new = malloc(strlen(old) + 1);
+	if (new == NULL){
+		return NULL;
+	}
 	strcpy(new, old);
 	return new;
 }
@@ -104,8 +105,7 @@ char *strdup(const char *old) {
 
 bool hash_guardar(hash_t *hash, const char *clave, void *dato){
 
-	size_t len = strlen(clave);
-	size_t pos = Hash(clave, hash->tam, len);
+	size_t pos = Hash(clave, hash->tam);
 	bool terminado = false;
 	while (!terminado){
 
@@ -140,13 +140,8 @@ bool hash_guardar(hash_t *hash, const char *clave, void *dato){
 	
 
 void *hash_borrar(hash_t *hash, const char *clave){
-	
-	if(!hash_pertenece(hash, clave)){
-		return NULL;
-	}
 	void* aux;	
-	size_t len = strlen(clave);
-	size_t pos = Hash(clave, hash->tam, len);
+	size_t pos = Hash(clave, hash->tam);
 	bool encontrado = false;
 	while (!encontrado){
 		if (hash->tabla[pos].estado == FINAL){
@@ -155,7 +150,7 @@ void *hash_borrar(hash_t *hash, const char *clave){
 		else if ((hash->tabla[pos].estado == BORRADO) || (hash->tabla[pos].estado == LLENO && hash->tabla[pos].clave != clave)){
 				pos++;
 			}
-			else if (hash->tabla[pos].clave == clave){
+			else if (hash->tabla[pos].estado == LLENO && hash->tabla[pos].clave == clave){
 				 	aux = hash->tabla[pos].dato;
 					hash->tabla[pos].estado = BORRADO;
 					hash->tabla[pos].dato = hash->destructor;
@@ -163,7 +158,10 @@ void *hash_borrar(hash_t *hash, const char *clave){
 					hash->cantidad_borrado++;
 					free(hash->tabla[pos].clave);
 				 	encontrado = true;
-				 }	
+				 }
+				 else if (hash->tabla[pos].estado == VACIO){
+				 	return NULL;
+				 }
 	}
 
 	size_t factor_carga = (hash->cantidad + hash->cantidad_borrado) / hash->tam;
@@ -178,11 +176,7 @@ void *hash_borrar(hash_t *hash, const char *clave){
 
 
 void *hash_obtener(const hash_t *hash, const char *clave){
-	if(!hash_pertenece(hash, clave)){
-		return NULL;
-	}
-	size_t len = strlen(clave);
-	size_t pos = Hash(clave, hash->tam, len);
+	size_t pos = Hash(clave, hash->tam);
 	bool encontrado = false;
 	while (!encontrado){
 	if (hash->tabla[pos].estado == FINAL){
@@ -192,8 +186,11 @@ void *hash_obtener(const hash_t *hash, const char *clave){
 				pos++;
 			}
 			else {
-				 if (hash->tabla[pos].clave == clave){
+				 if (hash->tabla[pos].estado == LLENO && hash->tabla[pos].clave == clave){
 				 	encontrado = true;
+				 }
+				 else if (hash->tabla[pos].estado == VACIO){
+				 	return NULL;
 				 }
 
 			}
@@ -207,8 +204,7 @@ bool hash_pertenece(const hash_t *hash, const char *clave){
 	if (hash->cantidad == 0){
 		return false;
 	}
-	size_t len = strlen(clave);
-	size_t pos = Hash(clave, hash->tam, len);
+	size_t pos = Hash(clave, hash->tam);
 	bool encontrado = false;
 	while (!encontrado){
 	if (hash->tabla[pos].estado == LLENO && hash->tabla[pos].clave == clave){
@@ -216,11 +212,14 @@ bool hash_pertenece(const hash_t *hash, const char *clave){
 		}
 		else if ((hash->tabla[pos].estado == BORRADO) || (hash->tabla[pos].estado == LLENO && hash->tabla[pos].clave != clave)){
 				pos++;
-		}
+			}
 			else if (hash->tabla[pos].estado == VACIO){
 					return false;
-			}
-	}	
+				}
+				else if (hash->tabla[pos].estado == FINAL){
+						pos = 0;
+					}		
+	}
 	return true;
 }
 	
@@ -295,8 +294,3 @@ bool hash_iter_al_final(const hash_iter_t *iter){
 void hash_iter_destruir(hash_iter_t* iter){
 	free(iter);
 }
-
-
-
-
-
