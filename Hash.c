@@ -62,7 +62,7 @@ hash_t *hash_crear(hash_destruir_dato_t destruir_dato){
 
 bool pasar_datos(hash_t* hash, hash_t* hash_viejo){
 		
-	for(size_t i = 0; i < hash->tam; i++){
+	for(size_t i = 0; i < hash_viejo->tam; i++){
 		if (hash_viejo->tabla[i].estado == LLENO){
 			hash_guardar(hash, hash_viejo->tabla[i].clave, hash_viejo->tabla[i].dato);
 		}
@@ -128,8 +128,8 @@ bool hash_guardar(hash_t *hash, const char *clave, void *dato){
 				  }	else if (hash->tabla[pos].estado == LLENO && *(hash->tabla[pos].clave) == *clave){
 							if (hash->destructor != NULL)
 								hash->destructor(hash->tabla[pos].dato);
-							hash->tabla[pos].dato = dato;
-							terminado = true;
+								hash->tabla[pos].dato = dato;
+								terminado = true;
 						}
 	}
 
@@ -269,6 +269,7 @@ hash_iter_t *hash_iter_crear(const hash_t *hash){
 }
 
 bool hash_iter_avanzar(hash_iter_t *iter){
+	iter->pos++;
 	bool encontrado = false;
 	while (!encontrado){
 		if (hash_iter_al_final(iter)){
