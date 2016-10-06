@@ -104,20 +104,20 @@ char *strdup(const char *old) {
 }
 
 int hash_localizar_clave(const hash_t *hash, const char *clave, size_t* posicion){
-	size_t pos = *posicion;
+	size_t pos = Hash(clave, hash->tam);
 	bool vacio = false;
 	while (!vacio){
 		if (pos >= hash->tam){
 				pos = 0;
 		}
-		else if ((hash->tabla[pos].estado == BORRADO) || (hash->tabla[pos].estado == LLENO && *(hash->tabla[pos].clave) != *clave)){
+		else if ((hash->tabla[pos].estado == BORRADO) || (hash->tabla[pos].estado == LLENO && !(strcmp(hash->tabla[pos].clave, clave) == 0))){
 						pos++;
 			}
 			else if (hash->tabla[pos].estado == VACIO){
 					*posicion = pos;
 					vacio = true;
 				}	
-				else if (hash->tabla[pos].estado == LLENO && *(hash->tabla[pos].clave) == *clave){
+				else if (hash->tabla[pos].estado == LLENO && strcmp (hash->tabla[pos].clave, clave) == 0){
 				  		*posicion = pos;
 				  		return 2;
 					}
@@ -126,7 +126,7 @@ int hash_localizar_clave(const hash_t *hash, const char *clave, size_t* posicion
 }
 
 bool hash_guardar(hash_t *hash, const char *clave, void *dato){
-	size_t pos = Hash(clave, hash->tam);
+	size_t pos = 0;
 	int loc = hash_localizar_clave(hash, clave, &pos);
 	if (loc == 1){
 		char* copia = strdup(clave);
@@ -145,7 +145,7 @@ bool hash_guardar(hash_t *hash, const char *clave, void *dato){
 		hash->tabla[pos].dato = dato;
 	}
 
-	size_t factor_carga = (hash->cantidad + hash->cantidad_borrado) / hash->tam;
+	size_t factor_carga = ((hash->cantidad + hash->cantidad_borrado) / hash->tam) * 100;
 	if (factor_carga >= 70){
 		hash = redimensionar_hash (hash->tam * 2, hash);
 	}
@@ -154,7 +154,7 @@ bool hash_guardar(hash_t *hash, const char *clave, void *dato){
 	
 
 void *hash_borrar(hash_t *hash, const char *clave){
-	size_t pos = Hash(clave, hash->tam);
+	size_t pos = 0;
 	int loc = hash_localizar_clave(hash, clave, &pos);
 	if (loc == 1){
 		return NULL;
@@ -165,7 +165,7 @@ void *hash_borrar(hash_t *hash, const char *clave){
 		hash->cantidad_borrado++;
 	}
 	
-	size_t factor_carga = (hash->cantidad + hash->cantidad_borrado) / hash->tam;
+	size_t factor_carga = ((hash->cantidad + hash->cantidad_borrado) / hash->tam) * 100;
 	if (factor_carga <= 15 && hash->tam > TAM_INI){
 		hash = redimensionar_hash (hash->tam/2, hash);
 	}
@@ -174,7 +174,7 @@ void *hash_borrar(hash_t *hash, const char *clave){
 }
 	
 void *hash_obtener(const hash_t *hash, const char *clave){
-	size_t pos = Hash(clave, hash->tam);
+	size_t pos = 0;
 	int loc = hash_localizar_clave(hash, clave, &pos);
 	if (loc == 1){
 		return NULL;
@@ -187,7 +187,7 @@ void *hash_obtener(const hash_t *hash, const char *clave){
 	
 
 bool hash_pertenece(const hash_t *hash, const char *clave){
-	size_t pos = Hash(clave, hash->tam);
+	size_t pos = 0;
 	int loc = hash_localizar_clave(hash, clave, &pos);
 	if (loc == 1){
 		return false;
@@ -203,6 +203,8 @@ size_t hash_cantidad(const hash_t *hash){
 
 	return hash->cantidad;
 }
+
+
 
 void hash_destruir(hash_t *hash){
 	for(int i = 0; i < hash->tam; i++){
