@@ -37,17 +37,12 @@ size_t Hash(const char *str, size_t tam){
 
 typedef void (*hash_destruir_dato_t)(void *);
 
-hash_t* hash_nuevo (size_t tam){
-	hash_t* hash = malloc (sizeof(hash_t));
-	if (hash == NULL){
+celda_t* crear_tabla (size_t tam){
+	celda_t* tabla = malloc(tam * sizeof(celda_t));
+	if (tabla == NULL){
 		return NULL;
 	}
-	hash->tabla = malloc(tam * sizeof(celda_t));
-	if (hash->tabla == NULL){
-		free(hash);
-		return NULL;
-	}
-	return hash;
+	return tabla;
 }
 
 bool hash_inicializar (hash_t* hash, size_t tam, hash_destruir_dato_t destruir_dato){
@@ -55,42 +50,68 @@ bool hash_inicializar (hash_t* hash, size_t tam, hash_destruir_dato_t destruir_d
 	hash->cantidad = 0;
 	hash->cantidad_borrado = 0;
 	hash->destructor = destruir_dato;
-	for (size_t i = 0; i < tam; i++){
+	for (int i = 0; i < tam; i++){
 		hash->tabla[i].estado = VACIO;
 	}
 	return true;
 }
 
 hash_t *hash_crear(hash_destruir_dato_t destruir_dato){
-	hash_t* hash = hash_nuevo(TAM_INI);
+	hash_t* hash = malloc (sizeof(hash_t));
 	if (hash == NULL){
 		return NULL;
 	}
+	celda_t* tabla = crear_tabla(TAM_INI);
+	if (tabla == NULL){
+		free (hash);
+		return NULL;
+	}
+	hash->tabla = tabla;
 	hash_inicializar(hash, TAM_INI, destruir_dato);
 	return hash;
 }
 
 
-bool pasar_datos(hash_t* hash, hash_t* hash_viejo){
-		
-	for(size_t i = 0; i < hash_viejo->tam; i++){
-		if (hash_viejo->tabla[i].estado == LLENO){
-			hash_guardar(hash, hash_viejo->tabla[i].clave, hash_viejo->tabla[i].dato);
+
+
+
+void tabla_destruir (celda_t* tabla, size_t tam){
+	for(int i = 0; i < tam; i++){
+		if(tabla[i].estado == LLENO || tabla[i].estado == BORRADO){
+			free(tabla[i].clave);
 		}
 	}
-	return true;	
+	free(tabla);
 }
 
-
-hash_t* redimensionar_hash (size_t tam_nuevo, hash_t* hash_viejo){
-	hash_t* hash = hash_nuevo(tam_nuevo);
-	if(hash == NULL){
-		return NULL;
+bool redimensionar_hash (size_t tam_nuevo, hash_t* hash){
+	celda_t* tabla_nueva = crear_tabla (tam_nuevo);
+	if (tabla_nueva == NULL){
+		return false;
 	}
-	hash_inicializar(hash,tam_nuevo, hash_viejo->destructor);
-	pasar_datos(hash, hash_viejo);
-	hash_destruir(hash_viejo);
-	return hash;
+
+	size_t tam = hash->tam;
+	size_t cantidad = hash->cantidad;
+	size_t cantidad_borrado = hash->cantidad_borrado;
+	celda_t* aux = hash->tabla;
+	hash->tabla = tabla_nueva;
+	hash_inicializar(hash, tam_nuevo, hash->destructor);
+	
+	for(int i = 0; i < tam; i++){
+		if (aux[i].estado == LLENO){
+			if (!hash_guardar(hash, aux[i].clave, aux[i].dato)){
+				hash->tam = tam;
+				hash->cantidad = cantidad;
+				hash->cantidad_borrado = cantidad_borrado;
+				hash->tabla = aux;
+				tabla_destruir(tabla_nueva, tam_nuevo);
+				return false;
+			}	
+		}
+	}
+
+	tabla_destruir(aux, tam);
+	return true;
 }
 
 
@@ -145,9 +166,11 @@ bool hash_guardar(hash_t *hash, const char *clave, void *dato){
 		hash->tabla[pos].dato = dato;
 	}
 
-	size_t factor_carga = ((hash->cantidad + hash->cantidad_borrado) / hash->tam) * 100;
+	size_t factor_carga = ((hash->cantidad + hash->cantidad_borrado) * 100) / hash->tam;
 	if (factor_carga >= 70){
-		hash = redimensionar_hash (hash->tam * 2, hash);
+		if(!redimensionar_hash (hash->tam * 2, hash)){
+			return false;
+		}
 	}
 	return true;
 }
@@ -165,9 +188,11 @@ void *hash_borrar(hash_t *hash, const char *clave){
 		hash->cantidad_borrado++;
 	}
 	
-	size_t factor_carga = ((hash->cantidad + hash->cantidad_borrado) / hash->tam) * 100;
+	size_t factor_carga = ((hash->cantidad * 100)) / hash->tam;
 	if (factor_carga <= 15 && hash->tam > TAM_INI){
-		hash = redimensionar_hash (hash->tam/2, hash);
+		if(!redimensionar_hash (hash->tam/2, hash)){
+			return NULL;
+		}
 	}
 	
 	return hash->tabla[pos].dato; 
