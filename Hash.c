@@ -77,7 +77,7 @@ hash_t *hash_crear(hash_destruir_dato_t destruir_dato){
 
 void tabla_destruir (celda_t* tabla, size_t tam){
 	for(int i = 0; i < tam; i++){
-		if(tabla[i].estado == LLENO || tabla[i].estado == BORRADO){
+		if(tabla[i].estado == LLENO){
 			free(tabla[i].clave);
 		}
 	}
@@ -125,7 +125,9 @@ char *strdup(const char *old) {
 }
 
 int hash_localizar_clave(const hash_t *hash, const char *clave, size_t* posicion){
-	size_t pos = Hash(clave, hash->tam);
+	size_t pos = 0;
+	if (*clave != '\0')
+		pos = Hash(clave, hash->tam);
 	bool vacio = false;
 	while (!vacio){
 		if (pos >= hash->tam){
@@ -147,6 +149,9 @@ int hash_localizar_clave(const hash_t *hash, const char *clave, size_t* posicion
 }
 
 bool hash_guardar(hash_t *hash, const char *clave, void *dato){
+	if (clave == NULL){
+		return false;
+	}
 	size_t pos = 0;
 	int loc = hash_localizar_clave(hash, clave, &pos);
 	if (loc == 1){
@@ -177,12 +182,18 @@ bool hash_guardar(hash_t *hash, const char *clave, void *dato){
 	
 
 void *hash_borrar(hash_t *hash, const char *clave){
+	if (clave == NULL){
+		return false;
+	}
 	size_t pos = 0;
 	int loc = hash_localizar_clave(hash, clave, &pos);
 	if (loc == 1){
 		return NULL;
 	}
 	if (loc == 2){
+		free(hash->tabla[pos].clave);
+		if(hash->destructor != NULL)
+			hash->destructor(hash->tabla[pos].dato);
 		hash->tabla[pos].estado = BORRADO;
 		hash->cantidad--;
 		hash->cantidad_borrado++;
@@ -233,7 +244,7 @@ size_t hash_cantidad(const hash_t *hash){
 
 void hash_destruir(hash_t *hash){
 	for(int i = 0; i < hash->tam; i++){
-		if(hash->tabla[i].estado == LLENO || hash->tabla[i].estado == BORRADO){
+		if(hash->tabla[i].estado == LLENO){
 			free(hash->tabla[i].clave);
 			if(hash->destructor != NULL)
 				hash->destructor(hash->tabla[i].dato);
