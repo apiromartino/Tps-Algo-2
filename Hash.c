@@ -192,8 +192,6 @@ void *hash_borrar(hash_t *hash, const char *clave){
 	}
 	if (loc == 2){
 		free(hash->tabla[pos].clave);
-		if(hash->destructor != NULL)
-			hash->destructor(hash->tabla[pos].dato);
 		hash->tabla[pos].estado = BORRADO;
 		hash->cantidad--;
 		hash->cantidad_borrado++;
