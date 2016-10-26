@@ -10,7 +10,11 @@ typedef struct abb_nodo abb_nodo_t;
 
 typedef struct abb abb_t;
 
+
+//tipo de funcion para comparar claves
 typedef int (*abb_comparar_clave_t) (const char *, const char *);
+
+// tipo de función para destruir dato
 typedef void (*abb_destruir_dato_t) (void *);
 
 
