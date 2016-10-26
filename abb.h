@@ -50,13 +50,8 @@ void abb_destruir(abb_t *arbol);
 
 typedef struct abb_iter abb_iter_t;
 
-// Crea un iterador para el abb.
-// Post: devuelve un iterador colocado en el primer elemento del abb si es que existe,
-// si el abb esta vacio el iterador apunta a NULL.
 abb_iter_t *abb_iter_in_crear(const abb_t *arbol);
 
-// Devuelve el elemento del abb al que esta apuntando el iterador en ese momento.
-// Devuelve NULL en caso de que el abb este vacio.
 bool abb_iter_in_avanzar(abb_iter_t *iter);
 
 
