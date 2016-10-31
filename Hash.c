@@ -2,8 +2,14 @@
 #include <stdlib.h>
 #include <string.h>
 
-
+#define POSICION_VACIA 1
+#define POSICION_OCUPADA 2
 #define TAM_INI 337
+
+// Alumnos: Ariel Piro Martino (Padron: 99469)
+//	    Juan Cruz OPizzi (Padron: 99807)
+//Ayudante: Miguel Alfaro	
+		
 
 typedef enum {BORRADO, LLENO, VACIO} estado_t;
 
@@ -44,13 +50,10 @@ typedef void (*hash_destruir_dato_t)(void *);
 
 celda_t* crear_tabla (size_t tam){
 	celda_t* tabla = malloc(tam * sizeof(celda_t));
-	if (tabla == NULL){
-		return NULL;
-	}
 	return tabla;
 }
 
-bool hash_inicializar (hash_t* hash, size_t tam, hash_destruir_dato_t destruir_dato){
+void hash_inicializar (hash_t* hash, size_t tam, hash_destruir_dato_t destruir_dato){
 	hash->tam = tam;
 	hash->cantidad = 0;
 	hash->cantidad_borrado = 0;
@@ -58,7 +61,6 @@ bool hash_inicializar (hash_t* hash, size_t tam, hash_destruir_dato_t destruir_d
 	for (int i = 0; i < tam; i++){
 		hash->tabla[i].estado = VACIO;
 	}
-	return true;
 }
 
 hash_t *hash_crear(hash_destruir_dato_t destruir_dato){
@@ -136,8 +138,8 @@ int hash_localizar_clave(const hash_t *hash, const char *clave, size_t* posicion
 		
 	bool vacio = false;
 	while (!vacio){
-		if (pos >= hash->tam){
-				pos = 0;
+		if (pos == hash->tam){
+			pos = 0;
 		}
 		else if ((hash->tabla[pos].estado == BORRADO) || (hash->tabla[pos].estado == LLENO && strcmp(hash->tabla[pos].clave, clave) != 0)){
 						pos++;
@@ -148,10 +150,10 @@ int hash_localizar_clave(const hash_t *hash, const char *clave, size_t* posicion
 				}	
 				else if (hash->tabla[pos].estado == LLENO && strcmp (hash->tabla[pos].clave, clave) == 0){
 				  		*posicion = pos;
-				  		return 2;
+				  		return POSICION_OCUPADA;
 					}
 	}
-	return 1;
+	return POSICION_VACIA;
 }
 
 bool hash_guardar(hash_t *hash, const char *clave, void *dato){
@@ -167,7 +169,7 @@ bool hash_guardar(hash_t *hash, const char *clave, void *dato){
 	}
 	size_t pos = 0;
 	int loc = hash_localizar_clave(hash, clave, &pos);
-	if (loc == 1){
+	if (loc == POSICION_VACIA){
 		char* copia = strdup(clave);
 		if (copia == NULL){
 			return false;
@@ -177,7 +179,7 @@ bool hash_guardar(hash_t *hash, const char *clave, void *dato){
 		hash->tabla[pos].dato = dato;
 		hash->cantidad++;
 	}
-	if (loc == 2){
+	if (loc == POSICION_OCUPADA){
 		if (hash->destructor != NULL){
 			hash->destructor(hash->tabla[pos].dato);
 		}
@@ -200,10 +202,10 @@ void *hash_borrar(hash_t *hash, const char *clave){
 	}
 	size_t pos = 0;
 	int loc = hash_localizar_clave(hash, clave, &pos);
-	if (loc == 1){
+	if (loc == POSICION_VACIA){
 		return NULL;
 	}
-	if (loc == 2){
+	if (loc == POSICION_OCUPADA){
 		free(hash->tabla[pos].clave);
 		hash->tabla[pos].estado = BORRADO;
 		hash->cantidad--;
@@ -212,13 +214,13 @@ void *hash_borrar(hash_t *hash, const char *clave){
 	
 	return hash->tabla[pos].dato;
 }
-	
+
 bool encontrado_o_vacio(const hash_t *hash, const char *clave, size_t* pos){
 	int loc = hash_localizar_clave(hash, clave, pos);
-	if (loc == 1){
+	if (loc == POSICION_VACIA){
 		return false;
 	}
-	if (loc == 2){
+	if (loc == POSICION_OCUPADA){
 		return true;		
 	}
 	return false;
@@ -240,10 +242,10 @@ bool hash_pertenece(const hash_t *hash, const char *clave){
 	}
 	return false;
 }
+
 	
 
 size_t hash_cantidad(const hash_t *hash){
-
 	return hash->cantidad;
 }
 
@@ -270,12 +272,10 @@ struct hash_iter{
 
 
 hash_iter_t *hash_iter_crear(const hash_t *hash){
-
 	hash_iter_t* iter = malloc (sizeof(hash_iter_t));
 	if (iter == NULL){
 		return NULL;
 	}
-
 	iter->hash = hash;
 	if (iter->hash->cantidad == 0){
 		iter->pos = iter->hash->tam; 
@@ -290,7 +290,10 @@ hash_iter_t *hash_iter_crear(const hash_t *hash){
 		   }
 		}
 	iter->actual = iter->hash->tabla + iter->pos;
-	
+	/*iter->pos = 0;
+	while (iter->pos < hash->tam && iter->hash->tabla[iter->pos].estado == LLENO){
+		iter->pos++;
+		}*/
 	return iter;
 }
 
@@ -321,10 +324,7 @@ const char *hash_iter_ver_actual(const hash_iter_t *iter){
 
 
 bool hash_iter_al_final(const hash_iter_t *iter){
-	if (iter->pos >= iter->hash->tam){
-		return true;
-	}
-	return false;
+	return iter->pos >= iter->hash->tam;
 }
 
 
