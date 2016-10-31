@@ -272,28 +272,20 @@ struct hash_iter{
 
 
 hash_iter_t *hash_iter_crear(const hash_t *hash){
+
 	hash_iter_t* iter = malloc (sizeof(hash_iter_t));
 	if (iter == NULL){
 		return NULL;
 	}
+
 	iter->hash = hash;
-	if (iter->hash->cantidad == 0){
-		iter->pos = iter->hash->tam; 
+	size_t pos = 0;
+	while (pos < hash->tam && hash->tabla[pos].estado != LLENO){
+		pos++;
 	}
-	else { iter->pos = 0;
-		   bool encontrado = false;
-		   while (!encontrado){
-		   		if (iter->hash->tabla[iter->pos].estado == LLENO){
-		   			encontrado = true;
-		   		}
-		   		else iter->pos++;
-		   }
-		}
+	iter->pos = pos;
 	iter->actual = iter->hash->tabla + iter->pos;
-	/*iter->pos = 0;
-	while (iter->pos < hash->tam && iter->hash->tabla[iter->pos].estado == LLENO){
-		iter->pos++;
-		}*/
+	
 	return iter;
 }
 
