@@ -213,14 +213,21 @@ void *hash_borrar(hash_t *hash, const char *clave){
 	return hash->tabla[pos].dato;
 }
 	
-void *hash_obtener(const hash_t *hash, const char *clave){
-	size_t pos = 0;
-	int loc = hash_localizar_clave(hash, clave, &pos);
+bool encontrado_o_vacio(const hash_t *hash, const char *clave, size_t* pos){
+	int loc = hash_localizar_clave(hash, clave, pos);
 	if (loc == 1){
-		return NULL;
+		return false;
 	}
 	if (loc == 2){
-		return hash->tabla[pos].dato;		
+		return true;		
+	}
+	return false;
+}
+	
+void *hash_obtener(const hash_t *hash, const char *clave){
+	size_t pos = 0;
+	if (encontrado_o_vacio(hash, clave, &pos)){
+		return hash->tabla[pos].dato;
 	}
 	return NULL;
 }
@@ -228,11 +235,7 @@ void *hash_obtener(const hash_t *hash, const char *clave){
 
 bool hash_pertenece(const hash_t *hash, const char *clave){
 	size_t pos = 0;
-	int loc = hash_localizar_clave(hash, clave, &pos);
-	if (loc == 1){
-		return false;
-	}
-	if (loc == 2){
+	if (encontrado_o_vacio(hash, clave, &pos)){
 		return true;
 	}
 	return false;
