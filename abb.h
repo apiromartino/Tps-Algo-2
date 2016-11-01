@@ -50,6 +50,7 @@ size_t abb_cantidad(abb_t *arbol);
 void abb_destruir(abb_t *arbol);
 
 
+// ITERADOR EXTERNO
 
 
 typedef struct abb_iter abb_iter_t;
@@ -77,7 +78,9 @@ bool abb_iter_in_al_final(const abb_iter_t *iter);
 void abb_iter_in_destruir(abb_iter_t* iter);
 
 
+// ITERADOR INTERNO
 
+void _abb_in_order(abb_t *arbol, abb_nodo_t* actual, bool visitar(const char *, void *, void *), void *extra);
 
 
 
