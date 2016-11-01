@@ -55,33 +55,32 @@ void abb_destruir(abb_t *arbol);
 
 typedef struct abb_iter abb_iter_t;
 
+// Crea un iterador para el abb.
+// Post: devuelve un iterador colocado en el primer elemento del abb si es que existe,
+// si el abb esta vacio el iterador apunta a NULL.
 abb_iter_t *abb_iter_in_crear(const abb_t *arbol);
 
+// Avanza una posicion al iterador dentro del abb de forma in order devolviendo true,
+// devuelve false si ya no puede avanzar. 
 bool abb_iter_in_avanzar(abb_iter_t *iter);
 
-
-
-
-
+// Devuelve el elemento del abb al que esta apuntando el iterador en ese momento.
+// Devuelve NULL en caso de que el abb este vacio.
 const char *abb_iter_in_ver_actual(const abb_iter_t *iter);
 
-
-
-
-
+// Devuelve false si el iterador puede seguir avanzando dentro del abb, devuelve true si si el iterador ya no puede avanzar dentro del abb.
+// Pre: el iterador fue creado.
 bool abb_iter_in_al_final(const abb_iter_t *iter);
 
-
-
-
-
+// Destruye el iterador si este ya llego al final del abb.
+// Pre: el iterador fue creado.
 void abb_iter_in_destruir(abb_iter_t* iter);
 
 
 // ITERADOR INTERNO
 
+// Recorre el abb entero usando el metodo in order y permite utilizar los elementos del abb sin modificarlos.
+// Pre: visitar es una funcion que se recibe por parametro la cual recibe un dato del abb
+// y un elemento extra con el que hara lo que quiera con el dato de la lista. El abb fue creado.
+// Post: Itera de forma automatica. 
 void abb_in_order(abb_t *arbol, bool visitar(const char *, void *, void *), void *extra);
-
-
-
-#endif // ABB_H
