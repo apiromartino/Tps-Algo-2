@@ -80,7 +80,7 @@ void abb_iter_in_destruir(abb_iter_t* iter);
 
 // ITERADOR INTERNO
 
-void _abb_in_order(abb_t *arbol, abb_nodo_t* actual, bool visitar(const char *, void *, void *), void *extra);
+void abb_in_order(abb_t *arbol, bool visitar(const char *, void *, void *), void *extra);
 
 
 
