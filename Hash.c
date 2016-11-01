@@ -19,7 +19,6 @@ typedef struct celda_hash{
 	estado_t estado; 
 }celda_t;
 
-
 struct hash{
 	celda_t* tabla;
 	size_t tam;
@@ -29,7 +28,7 @@ struct hash{
 };
 
 
-
+//
 size_t hashing(const char *key, size_t largo){
     size_t hash, i;
     for(hash = i = 0; i < strlen(key); ++i){
@@ -48,11 +47,17 @@ size_t hashing(const char *key, size_t largo){
 
 typedef void (*hash_destruir_dato_t)(void *);
 
+// Crea la tabla donde van a estar los datos, claves y estados de cada posicion dentro del hash.
+// Pre: Se recibe por parametro el tamaño del hash para crear la tabla de dicho tamaño.
+// Post: se devolvio la tabla para el hash. 
 celda_t* crear_tabla (size_t tam){
 	celda_t* tabla = malloc(tam * sizeof(celda_t));
 	return tabla;
 }
 
+// Inicializa el hash con 0 elementos y del tamaño que recibe por parametro, tambien recibe el destructor que se le pasa por parametro. 
+// Pre: el hash fue creado.
+// Post: el hash tiene todo sus nodos sin datos adentro (con el estado en vacio).
 void hash_inicializar (hash_t* hash, size_t tam, hash_destruir_dato_t destruir_dato){
 	hash->tam = tam;
 	hash->cantidad = 0;
@@ -78,10 +83,8 @@ hash_t *hash_crear(hash_destruir_dato_t destruir_dato){
 	return hash;
 }
 
-
-
-
-
+// Recorre la tabla destruyendo las posiciones de la tabla del hash en caso de que las posiciones esten ocupadas por algun dato.
+// Pre: la tabla fue creada
 void tabla_destruir (celda_t* tabla, size_t tam){
 	for(int i = 0; i < tam; i++){
 		if(tabla[i].estado == LLENO){
@@ -91,6 +94,7 @@ void tabla_destruir (celda_t* tabla, size_t tam){
 	free(tabla);
 }
 
+//
 bool redimensionar_hash (size_t tam_nuevo, hash_t* hash){
 	celda_t* tabla_nueva = crear_tabla (tam_nuevo);
 	if (tabla_nueva == NULL){
@@ -121,7 +125,7 @@ bool redimensionar_hash (size_t tam_nuevo, hash_t* hash){
 	return true;
 }
 
-
+//
 char *strdup(const char *old) {
 	char *new = malloc(strlen(old) + 1);
 	if (new == NULL){
@@ -131,6 +135,9 @@ char *strdup(const char *old) {
 	return new;
 }
 
+// Busca en el hash la clave que recibe por parametro y devuelve si la posicion esta vacio u ocupada por un dato, VER 
+// Pre: el hash fue creado
+// Post: se devolvio el estado de la posicion donde esta la clave que se busca.
 int hash_localizar_clave(const hash_t *hash, const char *clave, size_t* posicion){
 	size_t pos = 0;
 	if (*clave != '\0')
@@ -215,6 +222,8 @@ void *hash_borrar(hash_t *hash, const char *clave){
 	return hash->tabla[pos].dato;
 }
 
+// Pre: el hash fue creado 
+// Post: Devuelve true si se encontro la posicion de la clave que recibe por paramatro y dicha posicion tiene un dato adentro, devuelve false si no se encontro la posicion o si la posicion esta vacia.
 bool encontrado_o_vacio(const hash_t *hash, const char *clave, size_t* pos){
 	int loc = hash_localizar_clave(hash, clave, pos);
 	if (loc == POSICION_VACIA){
