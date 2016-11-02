@@ -28,7 +28,7 @@ struct hash{
 };
 
 
-//
+// Utiliza un orden especifico de seleccion para insertar las claves dentro del hash cuando la funcion es invocada para crear el hash.
 size_t hashing(const char *key, size_t largo){
     size_t hash, i;
     for(hash = i = 0; i < strlen(key); ++i){
@@ -94,7 +94,9 @@ void tabla_destruir (celda_t* tabla, size_t tam){
 	free(tabla);
 }
 
-//
+// Pasa todos los datos del hash viejo a un nuevo hash de distinto tamaño, devolviendo true en caso de que sea posible, caso contrario devuelve false.
+// Pre: el hash fue creado.
+// Post: el hash fue redimensionado.
 bool redimensionar_hash (size_t tam_nuevo, hash_t* hash){
 	celda_t* tabla_nueva = crear_tabla (tam_nuevo);
 	if (tabla_nueva == NULL){
@@ -125,7 +127,7 @@ bool redimensionar_hash (size_t tam_nuevo, hash_t* hash){
 	return true;
 }
 
-//
+//hace un duplicado de la cadena recibida por parametro dada reservando memoria dinamica.
 char *strdup(const char *old) {
 	char *new = malloc(strlen(old) + 1);
 	if (new == NULL){
