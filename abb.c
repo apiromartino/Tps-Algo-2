@@ -4,6 +4,10 @@
 #include "pila.h"
 
 
+
+typedef struct  abb_nodo abb_nodo_t;
+
+
 struct abb_nodo {
 	char* clave;
 	void* dato;
@@ -11,6 +15,8 @@ struct abb_nodo {
 	abb_nodo_t* izq;
 	abb_nodo_t* der;
 };
+
+
 
 struct abb {
 	size_t cant;
@@ -69,6 +75,8 @@ abb_nodo_t* abb_crear_nodo (const char *clave, void *dato, abb_nodo_t* padre){
 
 	return abb_nodo;
 }
+
+
 
 bool _abb_guardar (abb_t* arbol, abb_nodo_t* actual, const char* clave, void* dato){
 
