@@ -5,9 +5,6 @@
 #include <stddef.h>
 
 
-
-typedef struct abb_nodo abb_nodo_t;
-
 typedef struct abb abb_t;
 
 
