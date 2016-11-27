@@ -1,0 +1,425 @@
+Comm
+
+#define _POSIX_C_SOURCE 200809L
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+#include "hash.h"
+
+#define salida_error -1
+#define arg_max 4
+#define arg_max_2 3
+
+//Abre el archivo
+FILE* abrir_archivo(char* nombre){
+	FILE* archivo;
+	char* nombre_arch = nombre;
+	archivo = fopen(nombre_arch, "r");
+	if (archivo == NULL){
+		return NULL;
+	}
+	return archivo;
+}
+
+typedef struct cantidad_rep
+{
+	int cant;
+}cantidad_rep_t;
+
+// Guarda las lineas del archivo recibido en el hash que se da.
+// En casod e haber algún problema, devuelve FALSE.
+bool guardar_lineas (hash_t* hash, FILE* archivo){
+
+	ssize_t largo;
+	char* linea = NULL;
+	size_t capacidad = 0;
+
+	while ((largo = getline(&linea, &capacidad, archivo)) != -1){
+		if (linea == NULL){
+			return false;
+		}
+		linea[largo - 1] = '\0';
+
+		if (!hash_pertenece (hash, linea)){
+				cantidad_rep_t* cantidad_rep = malloc(sizeof(cantidad_rep_t));
+				if ( cantidad_rep == NULL)
+					return false;
+				cantidad_rep->cant = 1;
+				hash_guardar(hash, linea, cantidad_rep);
+			}
+			else {
+				cantidad_rep_t* cantidad_rep = hash_obtener(hash, linea);
+				cantidad_rep_t* aux = malloc(sizeof(cantidad_rep_t));
+				if (aux == NULL)
+					return false;
+				int cant = cantidad_rep->cant++;
+				aux->cant = cant;
+				hash_guardar(hash, linea, aux);
+			}	
+	}
+	free(linea);
+	return true;
+}
+
+//Itera los elementos de un hash y se fija si tiene la misma linea en comun con el otro hash.
+// De ser así la imprime. En caso de haber algun problema devuelve FALSE.
+bool lineas_en_comun(hash_t* hash_1, hash_t* hash_2){
+
+	hash_iter_t* hash_iter = hash_iter_crear(hash_1);
+	if(!hash_iter)
+		return false;
+	while (!hash_iter_al_final(hash_iter)){
+		const char* linea = hash_iter_ver_actual(hash_iter);
+		if (hash_pertenece(hash_2, linea))
+			printf("%s\n", linea);	
+		
+		hash_iter_avanzar(hash_iter);
+	}
+	hash_iter_destruir(hash_iter);
+	return true;
+}
+
+//Itera los elementos de un hash y si no se repite en el mismo hash, ni esta en el otro, es decir,
+// que es unico de ese archivo, lo imprime. En caso de haber algun problema devuelve FALSE.
+bool lineas_unicas (hash_t* hash_1, hash_t* hash_2){
+
+	hash_iter_t* hash_iter = hash_iter_crear(hash_1);
+	if(!hash_iter)
+		return false;
+	while (!hash_iter_al_final(hash_iter)){
+		const char* linea = hash_iter_ver_actual(hash_iter);
+		cantidad_rep_t* cantidad_rep = hash_obtener(hash_1, linea);
+		if (cantidad_rep->cant == 1 && !hash_pertenece(hash_2, linea)){
+			printf("%s\n", linea);
+		}
+		hash_iter_avanzar(hash_iter);
+	}		
+	hash_iter_destruir(hash_iter);
+	return true;	
+}
+
+// Cierra los archivos que pasan por parámetro
+void cerrar_archivos(FILE* archivo_1, FILE* archivo_2){
+	fclose(archivo_1);
+	if(archivo_2 != NULL)
+		fclose(archivo_2);
+}
+
+// Destruye los hash que pasan por parametro
+void destruir_hashes(hash_t* hash_1, hash_t* hash_2){
+	hash_destruir(hash_1);
+	hash_destruir(hash_2);
+} 
+
+
+int main(int argc, char *argv[])
+{
+	if (argc != arg_max && argc != arg_max_2)
+		return salida_error;	
+
+	FILE* archivo_1 = abrir_archivo(argv[1]);
+	if (!archivo_1)
+		return salida_error;
+	
+	FILE* archivo_2 = abrir_archivo(argv[2]);
+	if (!archivo_2){
+		cerrar_archivos(archivo_1, NULL);
+		return salida_error;
+	}
+
+	hash_t* hash_1 = hash_crear(free);
+	if (hash_1 == NULL){
+		cerrar_archivos(archivo_1, archivo_2);
+		return salida_error;
+	}
+
+	hash_t* hash_2 = hash_crear(free);
+	if (hash_2 == NULL){
+		free(hash_1);
+		cerrar_archivos(archivo_1, archivo_2);
+		return salida_error;
+	}
+
+	if(!guardar_lineas(hash_1, archivo_1)){
+		return salida_error;
+		destruir_hashes(hash_1, hash_2);
+		cerrar_archivos(archivo_1, archivo_2);
+	}
+	if(!guardar_lineas(hash_2, archivo_2)){ 		
+		destruir_hashes(hash_1, hash_2);
+		cerrar_archivos(archivo_1, archivo_2);
+		return salida_error;
+	}
+
+	if (argc == arg_max_2){
+		if(!lineas_en_comun(hash_1, hash_2)){
+			destruir_hashes(hash_1, hash_2);
+			cerrar_archivos(archivo_1, archivo_2);
+			return salida_error;
+		}
+	}else	if (strcmp(argv[3], "-1") == 0){
+		 		if(!lineas_unicas(hash_1, hash_2)) {
+		 			destruir_hashes(hash_1, hash_2);
+					cerrar_archivos(archivo_1, archivo_2);
+		 			return salida_error;
+				 }
+			}else if(strcmp(argv[3], "-2") == 0 ) {
+					if(!lineas_unicas(hash_2, hash_1)){
+						destruir_hashes(hash_1, hash_2);
+						cerrar_archivos(archivo_1, archivo_2);
+						return salida_error;
+					} 
+			}
+	destruir_hashes(hash_1, hash_2);
+	cerrar_archivos(archivo_1, archivo_2);
+	return 0;
+}
+
+
+Uniq-count
+
+#include <stdio.h>
+#include <stdlib.h>
+#include "heap.h"
+
+// Crea un vector de k elementos y lo llena con el vector que recibe por parámetro.
+// Después crea un heap en base al primer vector mencionado y va recorriendo el segundo vector
+// quedándose en el heap los elementos mas chicos.
+// Devuelve el arreglo creado con los k elementos mas chivos de menor a mayor
+void** top_k(size_t k, void** datos, size_t tam_datos, cmp_func_t cmp){
+
+	void** top_k = calloc(k, sizeof(void*));
+	if (top_k == NULL)
+		return	NULL;
+
+	if (k > tam_datos){
+		for (int i = 0; i < tam_datos; i++){			
+			top_k[i] = datos[i];
+		}
+		heap_sort(top_k, tam_datos, cmp);
+		return top_k;
+	}
+	
+	for (int i = 0; i < k; i++){		
+		top_k[i] = datos[i];
+	}
+	heap_t * heap = heap_crear_arr(top_k, k, cmp);		
+		
+	for (size_t i = k; i < tam_datos; i++){
+		if(cmp(heap_ver_max(heap), datos[i]) > 0 ){
+			heap_desencolar(heap);
+			heap_encolar(heap, datos[i]);
+		}
+	}	
+
+	for (int i = (int)k - 1; i >= 0; i--){	
+		top_k[i] = heap_desencolar(heap);  
+		}
+	heap_destruir(heap, NULL);
+	return top_k;
+}
+Abb iter_post
+
+void _abb_post_order(abb_t *arbol, abb_nodo_t* actual, bool visitar(const char *, void *, void *), void *extra){
+
+	if (actual == NULL)
+		return;
+	_abb_post_order(arbol, actual->izq, visitar, extra);
+	_abb_post_order(arbol, actual->der, visitar, extra);
+	if(!visitar(actual->clave, actual->dato, extra))
+		return;
+	
+
+	return;
+}
+
+void abb_post_order(abb_t *arbol, bool visitar(const char *, void *, void *), void *extra){
+
+	_abb_post_order(arbol, arbol->raiz, visitar, extra);
+	return;
+}
+
+
+struct abb_iter_post {
+	pila_t* pila;
+};
+
+//Apila todos los hijos izquierdos y todos los hijos izquierdos
+// de todos hijos derechos que no tienen hermano.
+void abb_apilar_traza_izq(abb_nodo_t* actual, pila_t* pila){
+
+	if (actual == NULL)
+		return;
+	if(!pila_apilar(pila, actual))
+		return;
+	if (!actual->der && !actual->izq)
+		return;
+	if (actual->izq != NULL){
+		abb_apilar_traza_izq(actual->izq, pila);
+		return;
+	}
+	if (actual->der != NULL){
+		abb_apilar_traza_izq(actual->der, pila);			
+		return;
+	}
+	return;
+}
+
+
+abb_iter_post_t* abb_iter_post_crear(const abb_t* arbol){
+
+	abb_iter_post_t* iter = malloc (sizeof(abb_iter_t));
+	if (iter == NULL)
+		return NULL;
+
+	pila_t* pila = pila_crear();
+	if(arbol->raiz != NULL)
+		abb_apilar_traza_izq(arbol->raiz, pila);
+	iter->pila = pila;
+	return iter;
+}
+
+bool abb_iter_post_avanzar(abb_iter_post_t* iter){
+
+	if(abb_iter_post_al_final(iter)){
+		return false;
+	}
+
+	abb_nodo_t* nodo = pila_desapilar(iter->pila);
+	abb_nodo_t* tope = pila_ver_tope(iter->pila);
+	if (!pila_esta_vacia(iter->pila) && tope->izq != NULL)
+		if (strcmp(tope->izq->clave, nodo->clave) == 0){
+			abb_apilar_traza_izq(tope->der, iter->pila);
+		}
+	return true;
+}
+
+const char* abb_iter_post_ver_actual(const abb_iter_post_t* iter){
+	if (abb_iter_post_al_final(iter)){
+		return NULL;
+	}
+	abb_nodo_t* nodo_actual = pila_ver_tope(iter->pila);
+	return nodo_actual->clave;
+}
+
+bool abb_iter_post_al_final(const abb_iter_post_t* iter){
+
+	return pila_esta_vacia(iter->pila);
+}
+
+
+void abb_iter_post_destruir(abb_iter_post_t* iter){
+
+	pila_destruir(iter->pila);
+	free(iter);
+}
+
+Abb obtener_items
+
+typedef struct vector{
+
+	abb_item_t* abb_item;
+	size_t pos;
+
+}vector_t;
+
+// Llena el vector recibido como extra con la clave y el dato del árbol
+// que se esta iterando.
+bool llenar_vector(const char *clave, void *dato, void *extra){
+	
+	vector_t* vector = extra;
+	vector->abb_item[vector->pos].clave = clave;
+	vector->abb_item[vector->pos].valor = dato;
+	vector->pos++;
+
+	return true;
+}
+
+abb_item_t* abb_obtener_items(const abb_t* abb){
+
+	size_t cant = abb_cantidad(abb);
+
+	vector_t* vector = malloc(sizeof(vector_t));		
+	if (vector == NULL)
+		return NULL;
+
+	abb_item_t* abb_item = malloc(cant * sizeof(abb_item_t));
+	if (abb_item == NULL){
+		free(vector);
+		return NULL;
+	}
+
+	vector->abb_item = abb_item;
+	vector->pos = 0;
+
+	abb_in_order((abb_t*)abb,llenar_vector , vector);
+
+	abb_item = vector->abb_item;
+	free(vector);
+	return abb_item;
+}
+
+
+Heap actualizar_prioridad
+
+void heap_actualizar_prioridad(heap_t* heap, void* dato){
+
+	int i;
+	for (i = 0; i < heap->cant; i++){						
+		if (heap->cmp(heap->datos[i], dato) == 0);
+		break;
+	}
+	if (heap->cmp(heap->datos[0], heap->datos[i]) != 0 && heap->cmp(heap->datos[(i - 1)/2], heap->datos[i]) < 0)
+		upheap(heap->datos, heap->cant, i, heap->cmp);
+	
+	if (2 * i + 1 <= heap->cant && 2 * i + 2 <= heap->cant)
+		if (heap->cmp(heap->datos[2 * i + 1], heap->datos[i]) > 0 || heap->cmp(heap->datos[2 * i + 2], heap->datos[i]) > 0)
+			downheap(heap->datos, heap->cant, i, heap->cmp);
+
+}
+
+
+
+
+
+
+
+
+Top_k
+
+// Crea un vector de k elementos y lo llena con el vector que recibe por parámetro.
+// Después crea un heap en base al primer vector mencionado y va recorriendo el segundo vector
+// quedándose en el heap los elementos mas chicos.
+// Devuelve el arreglo creado con los k elementos mas chivos de menor a mayor
+void** top_k(size_t k, void** datos, size_t tam_datos, cmp_func_t cmp){
+
+	void** top_k = calloc(k, sizeof(void*));
+	if (top_k == NULL)
+		return	NULL;
+
+	if (k > tam_datos){
+		for (int i = 0; i < tam_datos; i++){			
+			top_k[i] = datos[i];
+		}
+		heap_sort(top_k, tam_datos, cmp);
+		return top_k;
+	}
+	
+	for (int i = 0; i < k; i++){		
+		top_k[i] = datos[i];
+	}
+	heap_t * heap = heap_crear_arr(top_k, k, cmp);		
+		
+	for (size_t i = k; i < tam_datos; i++){
+		if(cmp(heap_ver_max(heap), datos[i]) > 0 ){
+			heap_desencolar(heap);
+			heap_encolar(heap, datos[i]);
+		}
+	}	
+
+	for (int i = (int)k - 1; i >= 0; i--){	
+		top_k[i] = heap_desencolar(heap);  
+		}
+	heap_destruir(heap, NULL);
+	return top_k;
+}
